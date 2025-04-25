@@ -352,12 +352,17 @@
                 saveCsvBtn.style.display = 'none';
 
                 // Send JSON to backend
-                const response = await fetch('http://127.0.0.1:5000/api/search-jobs', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                // const response = await fetch('http://127.0.0.1:5000/api/search-jobs', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json'
+                //     },
+                //     body: JSON.stringify(formData)
+                // });
+                const response = await fetch('/api/search-jobs', {
+                     method: 'POST',
+                     headers: 'Content-Type': 'application/json'
+                        body: JSON.stringify(formData)
                 });
 
                 if (!response.ok) {
