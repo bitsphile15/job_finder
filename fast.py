@@ -216,20 +216,33 @@ def process_job_search(user_input: dict) -> list:
     logger.info(f"Returning {len(final_df)} jobs")
     return final_df.to_dict(orient='records')
 
-# FastAPI app
-app = FastAPI()
-# Add CORS middleware configuration (same as first.py)
+# # FastAPI app
+# app = FastAPI()
+# # Add CORS middleware configuration (same as first.py)
 
+# # app.add_middleware(
+# #     CORSMiddleware,
+# #     allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+# #     allow_credentials=True,
+# #     allow_methods=["GET", "POST", "OPTIONS"],
+# #     allow_headers=["*"],
+# # )
 # app.add_middleware(
 #     CORSMiddleware,
-#     allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+#     allow_origins=["[invalid url, do not cite] "[invalid url, do not cite] "https://jobfinder.up.railway.app"],
 #     allow_credentials=True,
 #     allow_methods=["GET", "POST", "OPTIONS"],
 #     allow_headers=["*"],
 # )
+
+
+# FastAPI app
+app = FastAPI()
+
+# Add CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["[invalid url, do not cite] "[invalid url, do not cite] "https://jobfinder.up.railway.app"],
+    allow_origins=["http://localhost:5000", "http://127.0.0.1:5000", "https://jobfinder.up.railway.app"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
