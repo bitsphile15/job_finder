@@ -359,10 +359,15 @@
                 //     },
                 //     body: JSON.stringify(formData)
                 // });
+                // const response = await fetch('/api/search-jobs', {
+                //      method: 'POST',
+                //      headers: 'Content-Type': 'application/json'
+                //         body: JSON.stringify(formData)
+                // });
                 const response = await fetch('/api/search-jobs', {
-                     method: 'POST',
-                     headers: 'Content-Type': 'application/json'
-                        body: JSON.stringify(formData)
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
                 });
 
                 if (!response.ok) {
