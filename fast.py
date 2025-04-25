@@ -19,14 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 load_dotenv()
-# Add CORS middleware configuration (same as first.py)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://jobfinder.com"],  # Allowed origin
-    allow_credentials=True,
-    allow_methods=["*"],  # Allowed methods
-    allow_headers=["*"],  # Allowed headers
-)
+
 # Groq API config
 key = os.getenv("GROQ_API_KEY")
 
@@ -225,6 +218,7 @@ def process_job_search(user_input: dict) -> list:
 
 # FastAPI app
 app = FastAPI()
+# Add CORS middleware configuration (same as first.py)
 
 app.add_middleware(
     CORSMiddleware,
