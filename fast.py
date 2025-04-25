@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Groq API config
-# key = os.getenv("GROQ_API_KEY")
-key=key,
+key = os.getenv("GROQ_API_KEY")
+
 model = ChatGroq(
     model="llama3-70b-8192",
     temperature=0.5,
