@@ -312,9 +312,10 @@
                             <th>Experience</th>
                             <th>Job Nature</th>
                             <th>Location</th>
-                            <th>Salary</th>
+                            <th>Salary (Annula) Pkr</th>
                             <th>Date Posted</th>
                             <th>Apply Link</th>
+                            <th>Interest</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -382,6 +383,7 @@
                         <td>${job.Salary || 'N/A'}</td>
                         <td>${job['Date of Posted'] || 'N/A'}</td>
                         <td><a href="${job['Apply_link'] || '#'}" class="apply-link" target="_blank">Apply</a></td>
+                        <td>${job.Interest || 'N/A'}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -410,7 +412,7 @@
                     return `"${cell.textContent.replace(/"/g, '""')}"`;
                 }).join(',');
             });
-            const csv = ['Sr.N,Source,Job Title,Company,Experience,Job Nature,Location,Salary,Date Posted,Apply Link', ...rows].join('\n');
+            const csv = ['Sr.N,Source,Job Title,Company,Experience,Job Nature,Location,Salary,Date Posted,Apply Link,Interest', ...rows].join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');

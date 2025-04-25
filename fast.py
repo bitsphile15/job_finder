@@ -18,8 +18,10 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 load_dotenv()
+
 # Groq API config
-key=os.getenv("GROQ_API_KEY")
+# key = os.getenv("GROQ_API_KEY")
+key=groq_key,
 model = ChatGroq(
     model="llama3-70b-8192",
     temperature=0.5,
@@ -29,25 +31,33 @@ model = ChatGroq(
     api_key=key
 )
 
-# Prompt template
+# Updated Prompt Template
 messages = [
-    ("system",
-     "You are an expert assistant for job seekers and HR professionals. Your job is to carefully read job descriptions and extract structured information. Return only a valid JSON object with no additional text, comments, or characters."
+    (
+        "system",
+        "You are an expert assistant for job seekers and HR professionals. "
+        "Analyze each job description to extract structured details and also determine if it matches the user's interests "
+        "(role, required skills, and job nature)."
     ),
-    ("human",
-     """Given the following job description:
+    (
+        "human",
+        """Given the following job description:
 
 {job}
 
-Extract and return the information in the following JSON format:
+And the user's input:
+
+{user_input}
+
+Extract and return a JSON object with these fields:
 
 {{
-    "Experience": "<number of years mentioned in job description or 'not specified'>",
-    "Skills": ["<list of core skills mentioned in job description or 'not specified'>"]
+    "Experience": "<number of years mentioned in the job description or 'not specified'>",
+    "Skills": ["<list of skills mentioned in the job description or 'not specified'>"],
+    "Interest": "<'yes' if the user's interests align with the position, skills, and nature; otherwise 'no'>"
 }}
 
-Ensure the output is a single, valid JSON object. Do not include any extra text, commas, or other characters outside the JSON object.
-"""
+Return only the JSON (no additional text, spaces, or anything else)."""
     ),
 ]
 
@@ -100,14 +110,15 @@ def scrape_with_country_logic(
     return combined_jobs
 
 # Main job processing function
-def process_job_search(
-    source: str,
-    jobPosition: str,
-    location: str,
-    jobAge: str
-) -> list:
-    logger.info(f"Processing job search: source={source}, term={jobPosition}, location={location}")
-
+def process_job_search(user_input: dict) -> list:
+    logger.info(f"Processing job search with input: {user_input}")
+    
+    # Extract parameters from user_input
+    source = user_input['source']
+    jobPosition = user_input['jobPosition']
+    location = user_input['location']
+    jobAge = user_input['jobAge']
+    
     site_mapping = {
         "LinkedIn": "linkedin",
         "Indeed": "indeed",
@@ -115,7 +126,7 @@ def process_job_search(
         "Glassdoor": "glassdoor"
     }
     site_name = site_mapping.get(source, "indeed")
-
+    
     search_term = jobPosition
     c_name = location
     try:
@@ -125,6 +136,7 @@ def process_job_search(
         raise HTTPException(status_code=400, detail="jobAge must be a valid number")
     results_wanted = 20
 
+    # Scrape jobs
     jobs_df = scrape_with_country_logic(
         search_term=search_term,
         results_wanted=results_wanted,
@@ -137,31 +149,38 @@ def process_job_search(
         logger.warning("No jobs scraped, returning empty list")
         return []
 
-    logger.info("Enriching jobs with LLM")
-    experiences, skills_list = [], []
+    # Enrich jobs with LLM
+    experiences, skills_list, interests = [], [], []
     for idx, row in jobs_df.iterrows():
         desc = str(row.get('description', 'Not Available'))
         if desc.strip() and desc != 'Not Available':
+            user_input_str = json.dumps(user_input, indent=4)
             try:
-                result_json = chain.invoke({"job": desc}).strip()
+                result_json = chain.invoke({"job": desc, "user_input": user_input_str}).strip()
                 result_dict = json.loads(result_json)
                 experiences.append(result_dict.get('Experience', 'not specified'))
                 skills_list.append(', '.join(result_dict.get('Skills', ['not specified'])))
+                interests.append(result_dict.get('Interest', 'no'))
             except json.JSONDecodeError as e:
                 logger.error(f"LLM JSON parsing failed for job {idx}: {str(e)}")
                 experiences.append('not specified')
                 skills_list.append('not specified')
+                interests.append('no')
             except Exception as e:
                 logger.error(f"LLM processing failed for job {idx}: {str(e)}")
                 experiences.append('not specified')
                 skills_list.append('not specified')
+                interests.append('no')
         else:
             experiences.append('not specified')
             skills_list.append('not specified')
+            interests.append('no')
+
     jobs_df['Experience'] = experiences
     jobs_df['Skills'] = skills_list
+    jobs_df['Interest'] = interests
 
-    logger.info("Calculating salaries")
+    # Calculate salaries
     def calculate_salary(row):
         try:
             interval = str(row.get('interval', '')).lower()
@@ -175,17 +194,23 @@ def process_job_search(
     jobs_df['Salary'] = jobs_df.apply(calculate_salary, axis=1)
     jobs_df['Job nature'] = jobs_df.get('is_remote').map({True: 'Remote', False: 'On-site'}, na_action='ignore').fillna('On-site')
 
-    logger.info("Preparing final DataFrame")
+    # Prepare final DataFrame
     jobs_df['Source'] = source
     jobs_df['Job title'] = jobs_df['title']
     jobs_df['Company'] = jobs_df['company']
     jobs_df['Location'] = jobs_df['location']
     jobs_df['Date of Posted'] = jobs_df['date_posted']
     jobs_df['Apply_link'] = jobs_df['job_url']
-    jobs_df['Job Description'] = jobs_df.get('description', 'Not Available')
+    jobs_df['Job Description'] = jobs_df['description'].fillna('Not Available')
 
-    final_columns = ['Source', 'Job title', 'Company', 'Experience', 'Job nature', 'Location', 'Salary', 'Date of Posted', 'Apply_link', 'Job Description', 'Skills']
+    final_columns = [
+        'Source', 'Job title', 'Company', 'Experience', 'Job nature', 'Location', 'Salary',
+        'Date of Posted', 'Apply_link', 'Job Description', 'Skills', 'Interest'
+    ]
     final_df = jobs_df[final_columns]
+
+    # Fix for nan values
+    final_df = final_df.fillna('Not Specified')
 
     logger.info(f"Returning {len(final_df)} jobs")
     return final_df.to_dict(orient='records')
@@ -206,13 +231,15 @@ async def serve_index():
     logger.info("Serving index.html")
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
-# Request schema
+# Updated Request schema
 class JobSearchRequest(BaseModel):
     source: str
     jobPosition: str
     experience: str
     salary: str
+    jobNature: str
     location: str
+    skills: str
     jobAge: str
 
     class Config:
@@ -222,12 +249,7 @@ class JobSearchRequest(BaseModel):
 async def search_jobs(request: JobSearchRequest):
     logger.info(f"Received job search request: {request.dict()}")
     try:
-        jobs = process_job_search(
-            source=request.source,
-            jobPosition=request.jobPosition,
-            location=request.location,
-            jobAge=request.jobAge
-        )
+        jobs = process_job_search(request.dict())
         logger.info(f"Returning {len(jobs)} jobs in response")
         return jobs
     except Exception as e:
