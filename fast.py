@@ -21,7 +21,7 @@ load_dotenv()
 
 # Groq API config
 # key = os.getenv("GROQ_API_KEY")
-key=groq_key,
+key=key,
 model = ChatGroq(
     model="llama3-70b-8192",
     temperature=0.5,
