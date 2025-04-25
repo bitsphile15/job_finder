@@ -13,12 +13,20 @@ import os
 from pydantic import BaseModel
 import dotenv
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 load_dotenv()
-
+# Add CORS middleware configuration (same as first.py)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://jobfinder.com"],  # Allowed origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allowed methods
+    allow_headers=["*"],  # Allowed headers
+)
 # Groq API config
 key = os.getenv("GROQ_API_KEY")
 
