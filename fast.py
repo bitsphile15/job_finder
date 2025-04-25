@@ -220,9 +220,16 @@ def process_job_search(user_input: dict) -> list:
 app = FastAPI()
 # Add CORS middleware configuration (same as first.py)
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "OPTIONS"],
+#     allow_headers=["*"],
+# )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+    allow_origins=["[invalid url, do not cite] "[invalid url, do not cite] "https://jobfinder.up.railway.app"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
