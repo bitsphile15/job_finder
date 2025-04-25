@@ -3,5 +3,5 @@ langchain
 langchain_core
 python-jobspy
 fastapi
-pydantic
 uvicorn
+pydantic
