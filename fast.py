@@ -242,7 +242,7 @@ app = FastAPI()
 # Add CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5000", "http://127.0.0.1:5000", "https://jobfinder.up.railway.app"],
+    allow_origins=["[invalid url, do not cite] "[invalid url, do not cite] "https://jobfinder.up.railway.app"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
